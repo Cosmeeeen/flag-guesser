@@ -18,13 +18,13 @@ export function checkAnswer(guess: string, correct: string): boolean {
   return isExactMatch || isSafePartialMatch;
 }
 
-export const saveHighscore = (score: number): void => {
-  localStorage.setItem('highscore', score.toString());
+export const saveHighscore = (score: number, mode: string = 'all'): void => {
+  localStorage.setItem(`highscore-${mode}`, score.toString());
   console.log('Highscore saved:', score);
 }
 
-export const getHighscore = (): number | null => {
-  const highscore = localStorage.getItem('highscore');
+export const getHighscore = (mode: string = 'all'): number | null => {
+  const highscore = localStorage.getItem(`highscore-${mode}`);
   console.log('Highscore retrieved:', highscore);
   return highscore ? parseInt(highscore, 10) : null;
 }

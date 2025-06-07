@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { useSearchParams } from "next/navigation";
 
 import { LoaderCircle } from 'lucide-react';
 import { Check } from 'lucide-react';
@@ -9,9 +10,16 @@ import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { CONTINENTS } from '@/lib/constants';
+
 import { checkAnswer, saveHighscore, getHighscore } from './utils';
 
 export default function Play() {
+  const rawContinent = useSearchParams().get('continent');
+  const continent = React.useMemo(() => (
+    CONTINENTS.includes(rawContinent ?? '') ? rawContinent : 'europe'
+  ), [rawContinent]);
+
   const [currentFlagUrl, setCurrentFlagUrl] = React.useState<string | null>(null);
   const [countryFact, setCountryFact] = React.useState<string | null>(null);
   const [correctAnswer, setCorrectAnswer] = React.useState<string | null>(null);
@@ -23,25 +31,24 @@ export default function Play() {
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const changeFlag = async () => {
+  const changeFlag = React.useCallback(async () => {
     setCurrentFlagUrl(null);
     setCountryFact(null);
-    const randomFlagData = await fetch('/api/flags/random').then((res) => res.json());
-    console.log(randomFlagData);
+    const randomFlagData = await fetch(`/api/flags/random?continent=${encodeURIComponent(continent ?? '')}`).then((res) => res.json());
     setCurrentFlagUrl(randomFlagData.flag);
     setCorrectAnswer(randomFlagData.name);
     const randomCountryFact = await fetch(`/api/fact?country=${randomFlagData.name}`).then((res) => res.json());
     setCountryFact(randomCountryFact.info);
-  };
+  }, [continent]);
 
   React.useEffect(() => {
     changeFlag();
-    const savedHighScore = getHighscore();
+    const savedHighScore = getHighscore(continent ?? undefined);
     console.log('Highscore on load:', savedHighScore);
     if (savedHighScore) {
       setHighScore(savedHighScore);
     }
-  }, []);
+  }, [changeFlag, continent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentGuess(e.target.value);
@@ -58,14 +65,14 @@ export default function Play() {
       setScore(score + 1);
       if (score + 1 > highScore) {
         setHighScore(score + 1);
-        saveHighscore(score + 1);
+        saveHighscore(score + 1, continent ?? undefined);
       }
     } else {
       setScore(0);
       setCountryFact(`Incorrect! The correct answer was ${correctAnswer}.`);
     }
     setShowFact(true);
-  }, [score, highScore, correctAnswer, currentGuess]);
+  }, [score, highScore, correctAnswer, currentGuess, continent]);
 
   const handleNextFlag = () => {
     setShowFact(false);
@@ -79,9 +86,9 @@ export default function Play() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center max-w-md mx-auto mt-32 gap-4">
+    <div className="flex flex-col items-center justify-center max-w-md mx-auto mt-32 gap-4 px-4">
       <h1 className="text-2xl font-medium">Score: {score}</h1>
-      <h2 className="text-lg">High Score: {highScore}</h2>
+      <h2 className="text-lg">High Score ({continent && continent.charAt(0).toUpperCase() + continent.slice(1)}): {highScore}</h2>
       {currentFlagUrl ? (
         <Image
           src={currentFlagUrl}
@@ -123,11 +130,6 @@ export default function Play() {
           </Button>
         </div>
       )}
-      <div className="flex items-center gap-2 mt-4">
-        Dev buttons, remember to delete :)
-        <Button onClick={changeFlag}>[DEV] Randomize</Button>
-        <Button onClick={() => setScore(0)}>Reset Score</Button>
-      </div>
     </div>
   );
 }

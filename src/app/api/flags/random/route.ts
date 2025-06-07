@@ -1,7 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET() {
-  const response = await fetch('https://restcountries.com/v3.1/all?fields=cca2,cca3,name,flags');
+export async function GET(request: NextRequest) {
+  const continent = request.nextUrl.searchParams.get('continent');
+
+  let url;
+  if (!continent || continent === 'all') {
+    url = 'https://restcountries.com/v3.1/all?fields=cca2,cca3,name,flags';
+  } else {
+    url = `https://restcountries.com/v3.1/region/${continent}?fields=cca2,cca3,name,flags`;
+  }
+
+  const response = await fetch(url);
 
   const countries = await response.json();
   const randomCountry = countries[Math.floor(Math.random() * countries.length)];
