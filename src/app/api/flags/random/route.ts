@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const response = await fetch('https://restcountries.com/v3.1/all');
+  const response = await fetch('https://restcountries.com/v3.1/all?fields=cca2,cca3,name,flags');
 
   const countries = await response.json();
   const randomCountry = countries[Math.floor(Math.random() * countries.length)];
