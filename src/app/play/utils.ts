@@ -1,27 +1,21 @@
 'use client';
 
-export const checkAnswer = (userAnswer: string, correctAnswer: string): boolean => {
-  let normalizedUserAnswer = userAnswer.trim().toLowerCase();
-  let normalizedCorrectAnswer = correctAnswer.trim().toLowerCase();
+export function checkAnswer(guess: string, correct: string): boolean {
+  const normalize = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
 
-  const fillerWords = ['the', 'a', 'an', 'and', 'of', 'in', 'to', 'for', 'on', 'with'];
-  const removeFillerWords = (answer: string) => {
-    return answer
-      .split(' ')
-      .filter(word => !fillerWords.includes(word))
-      .join(' ')
-      .replace(/[.,!?;:]/g, ''); // Remove punctuation
-  };
-  normalizedUserAnswer = removeFillerWords(normalizedUserAnswer);
-  normalizedCorrectAnswer = removeFillerWords(normalizedCorrectAnswer);
+  const normalizedGuess = normalize(guess);
+  const normalizedCorrect = normalize(correct);
 
-  const cleanAnswer = (answer: string) => {
-    return answer.replace(/[^a-zA-Z\s]/g, '').trim();
-  };
-  normalizedUserAnswer = cleanAnswer(normalizedUserAnswer);
-  normalizedCorrectAnswer = cleanAnswer(normalizedCorrectAnswer);
+  const isExactMatch = normalizedGuess === normalizedCorrect;
+  const isSafePartialMatch =
+    normalizedGuess.length >= 4 && normalizedCorrect.includes(normalizedGuess);
 
-  return normalizedUserAnswer === normalizedCorrectAnswer;
+  return isExactMatch || isSafePartialMatch;
 }
 
 export const saveHighscore = (score: number): void => {
