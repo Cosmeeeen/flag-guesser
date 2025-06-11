@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -19,16 +19,7 @@ export async function GET(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that provides short, fun facts about countries. You will be given just the name of a country, and you should respond with an interesting fact about it.',
-          },
-          {
-            role: 'user',
-            content: country,
-          },
-        ],
+        input: `Provide a brief fun fact about the country of ${country}, starting the response with the country name.`,
       }),
     });
 
@@ -39,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     const json = await res.json();
-    const content = json.choices?.[0]?.message?.content;
+    const content = json.output[0]?.content[0]?.text;
 
     if (content) {
       return NextResponse.json({ country, info: content });
