@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from '@/lib/openai';
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -10,29 +11,44 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await OpenAI.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful assistant that provides short, fun facts about countries. You will be given just the name of a country, and you should respond with an interesting fact about it.',
-        },
-        {
-          role: 'user',
-          content: `${country}`,
-        },
-      ],
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant that provides short, fun facts about countries. You will be given just the name of a country, and you should respond with an interesting fact about it.',
+          },
+          {
+            role: 'user',
+            content: country,
+          },
+        ],
+      }),
     });
 
-    const message = response.choices[0].message;
-    if (message && message.content) {
-      return NextResponse.json({ country, info: message.content });
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('OpenAI API error:', errorText);
+      return NextResponse.json({ error: 'OpenAI API error' }, { status: 500 });
+    }
+
+    const json = await res.json();
+    const content = json.choices?.[0]?.message?.content;
+
+    if (content) {
+      return NextResponse.json({ country, info: content });
     } else {
-      return NextResponse.json({ error: 'No information found' }, { status: 404 });
+      return NextResponse.json({ error: 'No content returned from OpenAI' }, { status: 500 });
     }
   } catch (error) {
-    console.error('Error fetching country information:', error);
-    return NextResponse.json({ error: 'Failed to fetch country information' }, { status: 500 });
+    console.error('Error calling OpenAI:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
