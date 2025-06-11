@@ -58,7 +58,6 @@ export function PlaySettings() {
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="africa">Africa</SelectItem>
-                  <SelectItem value="antarctica">Antarctica</SelectItem>
                   <SelectItem value="asia">Asia</SelectItem>
                   <SelectItem value="america">America</SelectItem>
                   <SelectItem value="europe">Europe</SelectItem>
