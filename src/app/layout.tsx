@@ -7,6 +7,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export const metadata: Metadata = {
   title: "Flag Guesser",
   description: "Guess what country a flag belongs to",
+  other: {
+    "google-adsense-account": "ca-pub-8594891858511370",
+  }
 };
 
 export default function RootLayout({
